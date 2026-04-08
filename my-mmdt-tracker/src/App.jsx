@@ -175,7 +175,7 @@ const CoursePreview = ({ course }) => {
   );
 };
 
-const DropColumn = ({ title, columnId, courses, highlightValid, isActivePool, headerActions }) => {
+const DropColumn = ({ title, columnId, courses, highlightValid, isActivePool, headerActions, minHeight }) => {
   const { setNodeRef, isOver } = useDroppable({ id: columnId });
 
   const borderColor = isOver ? '#15803d' : highlightValid ? '#22c55e' : '#d2dbe6';
@@ -193,7 +193,7 @@ const DropColumn = ({ title, columnId, courses, highlightValid, isActivePool, he
           border: `2px solid ${borderColor}`,
           background,
           borderRadius: '14px',
-          minHeight: '390px',
+          minHeight: minHeight || '390px',
           padding: '12px',
           display: 'flex',
           flexDirection: 'column',
@@ -256,6 +256,7 @@ function App() {
 
   const [activeSemester, setActiveSemester] = useState(1);
   const [poolFilter, setPoolFilter] = useState('All');
+  const [poolSearch, setPoolSearch] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [activeCourseId, setActiveCourseId] = useState(null);
   const [newCourseName, setNewCourseName] = useState('');
@@ -282,6 +283,12 @@ function App() {
   const assignedTechCredits = calculateProgress('digitalTechnology');
   const currentManagementSpecialization = calculateProgress('managementSpecialization');
   const currentManagementElectives = calculateProgress('managementElectives');
+  const hasMandatorySeminar = courses.some(
+    (course) =>
+      course.semester !== null &&
+      course.assignedCategory === 'managementSpecialization' &&
+      course.isSeminar === true
+  );
 
   const isThesisEligible =
     totalAssignedCredits >= 48 &&
@@ -302,7 +309,8 @@ function App() {
   const poolCourses = courses.filter(
     (course) =>
       course.semester === null &&
-      (poolFilter === 'All' || course.categories.includes(poolFilter))
+      (poolFilter === 'All' || course.categories.includes(poolFilter)) &&
+      course.name.toLowerCase().includes(poolSearch.trim().toLowerCase())
   );
   const methodsCourses = courses.filter(
     (course) => course.semester === activeSemester && course.assignedCategory === 'methods'
@@ -316,6 +324,9 @@ function App() {
   const electiveCourses = courses.filter(
     (course) => course.semester === activeSemester && course.assignedCategory === 'managementElectives'
   );
+
+  const estimatedCardHeight = 84;
+  const dynamicColumnHeight = `${Math.max(390, poolCourses.length * estimatedCardHeight + 120)}px`;
 
   const findCourse = (courseId) => courses.find((course) => String(course.id) === String(courseId));
   const activeCourse = activeCourseId ? findCourse(activeCourseId) : null;
@@ -497,6 +508,24 @@ function App() {
 
       <div
         style={{
+          border: '1px solid #dbe5f0',
+          borderRadius: '14px',
+          background: '#ffffff',
+          padding: '12px 14px',
+          marginBottom: '18px',
+        }}
+      >
+        <div style={{ fontWeight: 800, color: '#0f172a', marginBottom: '8px', fontSize: '14px' }}>
+          Mandatory Graduation Requirements
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#334155', fontSize: '14px' }}>
+          <span>{hasMandatorySeminar ? '✅' : '❌'}</span>
+          <span>1x Advanced Seminar in Mgmt Spec. (6 ECTS)</span>
+        </div>
+      </div>
+
+      <div
+        style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(auto-fit, minmax(230px, 1fr))',
           gap: '12px',
@@ -574,6 +603,7 @@ function App() {
             courses={poolCourses}
             highlightValid={activeCourseId ? activeAllowedColumns.includes('coursePool') : false}
             isActivePool
+            minHeight={dynamicColumnHeight}
             headerActions={(
               <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                 <select
@@ -594,6 +624,21 @@ function App() {
                   <option value="managementSpecialization">managementSpecialization</option>
                   <option value="managementElectives">managementElectives</option>
                 </select>
+                <input
+                  type="text"
+                  placeholder="Search..."
+                  value={poolSearch}
+                  onChange={(event) => setPoolSearch(event.target.value)}
+                  style={{
+                    border: '1px solid #cbd5e1',
+                    borderRadius: '8px',
+                    fontSize: '12px',
+                    padding: '6px 8px',
+                    color: '#0f172a',
+                    background: '#ffffff',
+                    width: '130px',
+                  }}
+                />
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(true)}
@@ -618,24 +663,28 @@ function App() {
             columnId="methods"
             courses={methodsCourses}
             highlightValid={activeCourseId ? activeAllowedColumns.includes('methods') : false}
+            minHeight={dynamicColumnHeight}
           />
           <DropColumn
             title="Digital Technology"
             columnId="digitalTechnology"
             courses={techCourses}
             highlightValid={activeCourseId ? activeAllowedColumns.includes('digitalTechnology') : false}
+            minHeight={dynamicColumnHeight}
           />
           <DropColumn
             title="Management Specialization"
             columnId="managementSpecialization"
             courses={specCourses}
             highlightValid={activeCourseId ? activeAllowedColumns.includes('managementSpecialization') : false}
+            minHeight={dynamicColumnHeight}
           />
           <DropColumn
             title="Management Electives"
             columnId="managementElectives"
             courses={electiveCourses}
             highlightValid={activeCourseId ? activeAllowedColumns.includes('managementElectives') : false}
+            minHeight={dynamicColumnHeight}
           />
         </div>
 
