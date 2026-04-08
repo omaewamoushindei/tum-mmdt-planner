@@ -17,6 +17,7 @@ const CATEGORY_COLUMNS = {
   digitalTechnology: { title: 'Digital Technology' },
   managementSpecialization: { title: 'Management Specialization' },
   managementElectives: { title: 'Management Electives' },
+  thesis: { title: "Master's Thesis" },
 };
 
 const COLUMN_ORDER = [
@@ -25,17 +26,22 @@ const COLUMN_ORDER = [
   'digitalTechnology',
   'managementSpecialization',
   'managementElectives',
+  'thesis',
 ];
 
 const STORAGE_KEY = 'mmdt-two-tier-courses';
+const SEMESTERS_STORAGE_KEY = 'mmdt-semesters';
+const GERMAN_A1_STORAGE_KEY = 'mmdt-has-german-a1';
+const PROGRAMMING_STORAGE_KEY = 'mmdt-has-programming';
 const CATEGORY_OPTIONS = [
   'methods',
   'digitalTechnology',
   'managementSpecialization',
   'managementElectives',
+  'thesis',
 ];
 
-const isValidSemester = (value) => [1, 2, 3, 4].includes(value);
+const isValidSemester = (value) => Number.isInteger(value) && value > 0;
 
 const normalizeCourse = (course) => {
   const semester = isValidSemester(course.semester) ? course.semester : null;
@@ -254,7 +260,37 @@ function App() {
     }
   });
 
+  const [semesters, setSemesters] = useState(() => {
+    try {
+      const parsed = JSON.parse(localStorage.getItem(SEMESTERS_STORAGE_KEY));
+      if (!Array.isArray(parsed) || parsed.length === 0) return [1, 2, 3, 4];
+
+      const normalized = parsed
+        .map((value) => Number(value))
+        .filter((value) => Number.isInteger(value) && value > 0)
+        .sort((a, b) => a - b);
+
+      if (normalized.length === 0) return [1, 2, 3, 4];
+      return Array.from(new Set(normalized));
+    } catch {
+      return [1, 2, 3, 4];
+    }
+  });
   const [activeSemester, setActiveSemester] = useState(1);
+  const [hasGermanA1, setHasGermanA1] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem(GERMAN_A1_STORAGE_KEY)) === true;
+    } catch {
+      return false;
+    }
+  });
+  const [hasProgramming, setHasProgramming] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem(PROGRAMMING_STORAGE_KEY)) === true;
+    } catch {
+      return false;
+    }
+  });
   const [poolFilter, setPoolFilter] = useState('All');
   const [poolSearch, setPoolSearch] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -267,6 +303,24 @@ function App() {
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(courses));
   }, [courses]);
+
+  useEffect(() => {
+    localStorage.setItem(SEMESTERS_STORAGE_KEY, JSON.stringify(semesters));
+  }, [semesters]);
+
+  useEffect(() => {
+    if (!semesters.includes(activeSemester)) {
+      setActiveSemester(semesters[0]);
+    }
+  }, [activeSemester, semesters]);
+
+  useEffect(() => {
+    localStorage.setItem(GERMAN_A1_STORAGE_KEY, JSON.stringify(hasGermanA1));
+  }, [hasGermanA1]);
+
+  useEffect(() => {
+    localStorage.setItem(PROGRAMMING_STORAGE_KEY, JSON.stringify(hasProgramming));
+  }, [hasProgramming]);
 
   const assignedCourses = courses.filter(
     (course) => course.assignedCategory !== null && course.semester !== null
@@ -283,6 +337,7 @@ function App() {
   const assignedTechCredits = calculateProgress('digitalTechnology');
   const currentManagementSpecialization = calculateProgress('managementSpecialization');
   const currentManagementElectives = calculateProgress('managementElectives');
+  const currentThesisCredits = calculateProgress('thesis');
   const hasMandatorySeminar = courses.some(
     (course) =>
       course.semester !== null &&
@@ -295,7 +350,7 @@ function App() {
     assignedTechCredits >= 18 &&
     assignedMethodCredits >= 6;
 
-  const semesterSummaries = [1, 2, 3, 4].map((semester) => {
+  const semesterSummaries = semesters.map((semester) => {
     const semesterCourses = courses.filter((course) => course.semester === semester);
     const semesterCredits = semesterCourses.reduce((sum, course) => sum + Number(course.credits || 0), 0);
 
@@ -323,6 +378,9 @@ function App() {
   );
   const electiveCourses = courses.filter(
     (course) => course.semester === activeSemester && course.assignedCategory === 'managementElectives'
+  );
+  const thesisCourses = courses.filter(
+    (course) => course.semester === activeSemester && course.assignedCategory === 'thesis'
   );
 
   const estimatedCardHeight = 84;
@@ -394,6 +452,13 @@ function App() {
         return prev.filter((item) => item !== category);
       }
       return [...prev, category];
+    });
+  };
+
+  const handleAddSemester = () => {
+    setSemesters((prev) => {
+      const nextSemester = (prev[prev.length - 1] || 0) + 1;
+      return [...prev, nextSemester];
     });
   };
 
@@ -503,6 +568,7 @@ function App() {
             target={targets.managementElectives}
             color="#10b981"
           />
+          <ProgressRing label="Thesis" current={currentThesisCredits} target={30} color="#7c3aed" />
         </div>
       </div>
 
@@ -522,6 +588,44 @@ function App() {
           <span>{hasMandatorySeminar ? '✅' : '❌'}</span>
           <span>1x Advanced Seminar in Mgmt Spec. (6 ECTS)</span>
         </div>
+        <button
+          type="button"
+          onClick={() => setHasGermanA1((prev) => !prev)}
+          style={{
+            marginTop: '8px',
+            border: 'none',
+            background: 'transparent',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            color: '#334155',
+            fontSize: '14px',
+            cursor: 'pointer',
+            padding: 0,
+          }}
+        >
+          <span>{hasGermanA1 ? '✅' : '⬜'}</span>
+          <span>German A1 Requirement</span>
+        </button>
+        <button
+          type="button"
+          onClick={() => setHasProgramming((prev) => !prev)}
+          style={{
+            marginTop: '8px',
+            border: 'none',
+            background: 'transparent',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            color: '#334155',
+            fontSize: '14px',
+            cursor: 'pointer',
+            padding: 0,
+          }}
+        >
+          <span>{hasProgramming ? '✅' : '⬜'}</span>
+          <span>Basic Programming Requirement</span>
+        </button>
       </div>
 
       <div
@@ -576,6 +680,33 @@ function App() {
             </button>
           );
         })}
+        <button
+          type="button"
+          onClick={handleAddSemester}
+          style={{
+            textAlign: 'center',
+            borderRadius: '14px',
+            border: '2px dashed #0ea5e9',
+            padding: '14px',
+            background: 'linear-gradient(140deg, #ecfeff, #f0f9ff)',
+            color: '#075985',
+            cursor: 'pointer',
+            minHeight: '148px',
+            boxShadow: '0 8px 20px rgba(14, 165, 233, 0.18)',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '8px',
+          }}
+          aria-label="Add semester"
+        >
+          <div style={{ fontSize: '38px', lineHeight: 1, fontWeight: 800 }}>+</div>
+          <div style={{ fontWeight: 700 }}>Add Semester</div>
+          <div style={{ fontSize: '12px', color: '#0c4a6e' }}>
+            Add Semester {(semesters[semesters.length - 1] || 0) + 1}
+          </div>
+        </button>
       </div>
 
       <DndContext
@@ -623,6 +754,7 @@ function App() {
                   <option value="digitalTechnology">digitalTechnology</option>
                   <option value="managementSpecialization">managementSpecialization</option>
                   <option value="managementElectives">managementElectives</option>
+                  <option value="thesis">thesis</option>
                 </select>
                 <input
                   type="text"
@@ -684,6 +816,13 @@ function App() {
             columnId="managementElectives"
             courses={electiveCourses}
             highlightValid={activeCourseId ? activeAllowedColumns.includes('managementElectives') : false}
+            minHeight={dynamicColumnHeight}
+          />
+          <DropColumn
+            title="Master's Thesis"
+            columnId="thesis"
+            courses={thesisCourses}
+            highlightValid={activeCourseId ? activeAllowedColumns.includes('thesis') : false}
             minHeight={dynamicColumnHeight}
           />
         </div>

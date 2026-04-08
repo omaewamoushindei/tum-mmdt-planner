@@ -100,5 +100,10 @@ export const initialCourses = [
   { id: "E21", name: "Economic Analysis of Contracts, Competition and Companies", credits: 6, categories: ["managementElectives"] },
   { id: "E22", name: "Empirical Research Project in Finance", credits: 6, categories: ["managementElectives"] },
   { id: "E23", name: "Master Thesis Seminar: Strategic Management", credits: 6, categories: ["managementElectives"] },
-  { id: "E24", name: "Transformative Impacts of Generative AI in Marketing", credits: 6, categories: ["managementElectives"] }
+  { id: "E24", name: "Transformative Impacts of Generative AI in Marketing", credits: 6, categories: ["managementElectives"] },
+  
+  // ==========================================
+  // MASTER'S THESIS (YÜKSEK LİSANS TEZİ)
+  // ==========================================
+  { id: "THESIS", name: "Master's Thesis", credits: 30, categories: ["thesis"] },
 ];
