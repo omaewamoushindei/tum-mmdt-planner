@@ -493,7 +493,10 @@ function App() {
   };
 
   return (
-    <div style={{ maxWidth: '1460px', margin: '0 auto', padding: '32px 28px 36px', fontFamily: 'system-ui, sans-serif' }}>
+    <div
+      className="min-h-screen bg-slate-50 text-slate-900"
+      style={{ maxWidth: '1460px', margin: '0 auto', padding: '32px 28px 36px', fontFamily: 'system-ui, sans-serif' }}
+    >
       <h1 style={{ textAlign: 'center', color: '#0f172a', marginBottom: '12px' }}>MMDT Two-Tier Semester Planner</h1>
 
       <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px' }}>
