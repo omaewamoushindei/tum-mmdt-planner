@@ -14,6 +14,8 @@
   --sans: system-ui, 'Segoe UI', Roboto, sans-serif;
   --heading: system-ui, 'Segoe UI', Roboto, sans-serif;
   --mono: ui-monospace, Consolas, monospace;
+  --board-column-width: 320px;
+  --course-pool-column-width: 340px;
 
   font: 18px/145% var(--sans);
   letter-spacing: 0.18px;
@@ -48,20 +50,38 @@
 
 body {
   margin: 0;
+  min-width: 0;
   background: var(--bg);
   color: var(--text);
 }
 
 #root {
-  width: 1126px;
-  max-width: 100%;
+  width: calc(100% - 48px);
+  max-width: 1840px;
+  min-width: 0;
   margin: 0 auto;
   text-align: center;
-  border-inline: 1px solid var(--border);
   min-height: 100svh;
   display: flex;
   flex-direction: column;
   box-sizing: border-box;
+}
+
+@media (max-width: 1024px) {
+  #root {
+    width: calc(100% - 24px);
+  }
+}
+
+@media (max-width: 640px) {
+  #root {
+    width: calc(100% - 16px);
+  }
+
+  :root {
+    --board-column-width: min(82vw, 300px);
+    --course-pool-column-width: min(88vw, 320px);
+  }
 }
 
 h1,
@@ -72,12 +92,12 @@ h2 {
 }
 
 h1 {
-  font-size: 56px;
-  letter-spacing: -1.68px;
-  margin: 32px 0;
+  font-size: clamp(30px, 3vw, 42px);
+  line-height: 1.1;
+  letter-spacing: -0.8px;
+  margin: 0;
   @media (max-width: 1024px) {
-    font-size: 36px;
-    margin: 20px 0;
+    letter-spacing: -0.5px;
   }
 }
 h2 {
@@ -106,4 +126,133 @@ code {
   line-height: 135%;
   padding: 4px 8px;
   background: var(--code-bg);
+}
+
+.app-shell {
+  padding: 20px 0 28px;
+}
+
+.current-semester-panel {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px 14px;
+}
+
+.current-semester-copy {
+  flex: 1 1 360px;
+  min-width: 0;
+}
+
+.progress-rings {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, 180px);
+  justify-content: center;
+  gap: 8px clamp(8px, 1.5vw, 24px);
+}
+
+.progress-ring {
+  width: 180px;
+  text-align: center;
+}
+
+.semester-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(230px, 100%), 1fr));
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
+.semester-card-wrapper {
+  position: relative;
+  min-width: 0;
+}
+
+.course-board-scroll {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  overflow-x: auto;
+  display: flex;
+  gap: 20px;
+  align-items: start;
+  padding-bottom: 8px;
+}
+
+.course-pool-controls {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr) auto;
+  gap: 6px;
+  align-items: center;
+  width: 100%;
+  min-width: 0;
+}
+
+.custom-course-category-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+@media (max-width: 640px) {
+  .app-shell {
+    padding: 14px 0 20px;
+  }
+
+  h1 {
+    font-size: clamp(26px, 7.2vw, 32px);
+    letter-spacing: -0.4px;
+  }
+
+  .current-semester-panel {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .current-semester-copy {
+    flex-basis: auto;
+  }
+
+  .current-semester-select {
+    width: 100%;
+    min-height: 42px;
+    box-sizing: border-box;
+  }
+
+  .semester-list {
+    display: flex;
+    overflow-x: auto;
+    scroll-snap-type: x proximity;
+    scroll-padding-inline: 2px;
+    padding: 2px 2px 9px;
+  }
+
+  .semester-card-wrapper,
+  .semester-add-card {
+    flex: 0 0 min(82vw, 290px);
+    scroll-snap-align: start;
+  }
+
+  .course-board-scroll {
+    gap: 14px;
+  }
+
+  .course-pool-controls {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+
+  .course-pool-controls > * {
+    min-height: 38px;
+  }
+
+  .course-pool-add-button {
+    grid-column: 1 / -1;
+    width: 100%;
+  }
+
+  .custom-course-category-grid {
+    grid-template-columns: 1fr;
+  }
 }
